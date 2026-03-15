@@ -1,0 +1,44 @@
+# docker-compose.yml — Orquestração dos serviços mock-api e app.
+#
+# Sobe dois serviços:
+#   - mock-api: simulador da API de pagamentos (porta 8001)
+#   - app: aplicação principal que consome o mock (porta 8000)
+#
+# A app só sobe após o mock-api passar no healthcheck, garantindo que
+# PAYMENT_API_BASE_URL=http://mock-api:8001 já esteja respondendo.
+
+services:
+
+  # Serviço do mock server — simula a API externa de pagamentos.
+  mock-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    ports:
+      - "8001:8001"
+    # Healthcheck verifica se a documentação OpenAPI está disponível,
+    # o que confirma que o Uvicorn inicializou corretamente.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/docs')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      # start_period dá tempo ao container para inicializar antes de contar falhas.
+      # Healthchecks que falham dentro desse período não contam como retries.
+      start_period: 15s
+
+  # Serviço da aplicação principal — FastAPI com PaymentClient resiliente.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Aponta para o serviço mock-api usando a rede interna do Docker Compose.
+      # O hostname "mock-api" é resolvido automaticamente pelo DNS interno do Docker.
+      - PAYMENT_API_BASE_URL=http://mock-api:8001
+    depends_on:
+      mock-api:
+        # Aguarda o mock-api passar no healthcheck antes de iniciar a app.
+        condition: service_healthy

@@ -1,0 +1,27 @@
+# Dockerfile.mock — Imagem Docker do mock server (simulador da API de pagamentos).
+#
+# Estrutura idêntica ao Dockerfile principal, mas inicia o mock_server
+# na porta 8001. Compartilha as mesmas dependências de produção do projeto,
+# já que o mock é um FastAPI app incluído no mesmo pyproject.toml.
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Copia o binário do uv diretamente da imagem oficial.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Copia arquivos de dependência antes do código para cache eficiente.
+COPY pyproject.toml uv.lock ./
+
+# Instala dependências de produção fixadas no lockfile.
+RUN uv sync --frozen --no-dev
+
+# Copia apenas o módulo do mock server (não precisa da app principal).
+COPY mock_server/ mock_server/
+
+EXPOSE 8001
+
+# Invoca o uvicorn diretamente pelo venv (mesma razão do Dockerfile principal:
+# evita o re-sync de dev-dependencies feito por `uv run` em cada container start).
+CMD ["/app/.venv/bin/uvicorn", "mock_server.server:app", "--host", "0.0.0.0", "--port", "8001"]
