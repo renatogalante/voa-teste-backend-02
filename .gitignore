@@ -1,0 +1,12 @@
+__pycache__/
+.venv/
+.env
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+.uv/
+.cursorrules
+TASKS.md
