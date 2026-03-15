@@ -167,9 +167,14 @@ class PaymentClient:
         # Timeout separado para conexão (TCP/TLS) e leitura (dados da resposta).
         # O write timeout não é configurado — para pagamentos o gargalo costuma
         # ser a leitura, não a escrita.
+        # A partir do httpx 0.28, Timeout exige todos os quatro parâmetros ou um default.
+        # write=None e pool=None desativam timeout para escrita e pool de conexões —
+        # o gargalo em APIs de pagamento está no connect e no read, não na escrita.
         timeout = httpx.Timeout(
             connect=self._settings.payment_api_connect_timeout,
             read=self._settings.payment_api_read_timeout,
+            write=None,
+            pool=None,
         )
 
         # base_url garante que todos os requests usem a URL da API configurada
