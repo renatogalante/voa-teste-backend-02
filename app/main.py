@@ -26,7 +26,7 @@ Ordem de registro dos exception handlers:
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.charges import router as charges_router
@@ -136,7 +136,7 @@ app.include_router(charges_router, prefix="/api/charges", tags=["charges"])
 
 
 @app.exception_handler(PaymentNotFoundError)
-async def handle_not_found(request, exc: PaymentNotFoundError) -> JSONResponse:
+async def handle_not_found(request: Request, exc: PaymentNotFoundError) -> JSONResponse:
     """
     Mapeia PaymentNotFoundError para HTTP 404 Not Found.
 
@@ -151,7 +151,7 @@ async def handle_not_found(request, exc: PaymentNotFoundError) -> JSONResponse:
 
 
 @app.exception_handler(PaymentClientError)
-async def handle_client_error(request, exc: PaymentClientError) -> JSONResponse:
+async def handle_client_error(request: Request, exc: PaymentClientError) -> JSONResponse:
     """
     Mapeia PaymentClientError para HTTP 400 Bad Request.
 
@@ -165,7 +165,7 @@ async def handle_client_error(request, exc: PaymentClientError) -> JSONResponse:
 
 
 @app.exception_handler(PaymentTimeoutError)
-async def handle_timeout(request, exc: PaymentTimeoutError) -> JSONResponse:
+async def handle_timeout(request: Request, exc: PaymentTimeoutError) -> JSONResponse:
     """
     Mapeia PaymentTimeoutError para HTTP 504 Gateway Timeout.
 
@@ -180,7 +180,7 @@ async def handle_timeout(request, exc: PaymentTimeoutError) -> JSONResponse:
 
 
 @app.exception_handler(PaymentUnavailableError)
-async def handle_unavailable(request, exc: PaymentUnavailableError) -> JSONResponse:
+async def handle_unavailable(request: Request, exc: PaymentUnavailableError) -> JSONResponse:
     """
     Mapeia PaymentUnavailableError para HTTP 502 Bad Gateway.
 
@@ -194,7 +194,7 @@ async def handle_unavailable(request, exc: PaymentUnavailableError) -> JSONRespo
 
 
 @app.exception_handler(PaymentConnectionError)
-async def handle_connection_error(request, exc: PaymentConnectionError) -> JSONResponse:
+async def handle_connection_error(request: Request, exc: PaymentConnectionError) -> JSONResponse:
     """
     Mapeia PaymentConnectionError para HTTP 502 Bad Gateway.
 
